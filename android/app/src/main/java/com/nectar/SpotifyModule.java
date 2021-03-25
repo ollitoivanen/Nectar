@@ -93,10 +93,9 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
                                     WritableMap params = Arguments.createMap();
                                     final Track track = playerState.track;
                                     params.putBoolean("isPaused", playerState.isPaused);
-                                    params.putString("trackName", track.name);
-
-                                    params.putString("trackUri", track.uri);
-                                    params.putInt("playbackPosition", (int)playerState.playbackPosition);
+                                    params.putString("name", track.name);
+                                    params.putString("uri", track.uri);
+                                    //params.putInt("playbackPosition", (int)playerState.playbackPosition);
                                     sendEvent(getReactApplicationContext(), "playerState", params);
                                 });
 

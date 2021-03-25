@@ -12,21 +12,18 @@ import {
 } from 'react-native';
 import {RNCamera} from 'react-native-camera';
 import Slider from '@react-native-community/slider';
+import ActionSetCurrentTrack from 'ActionSetCurrentTrack/ActionSetCurrentTrack';
+import {CurrentTrack} from 'constants/constants';
+import {connect} from 'react-redux';
+
 const {SpotifyModule} = NativeModules;
 
-const CameraScreen = ({route, navigation}) => {
+const CameraScreen = (props) => {
+  const {currentTrack, navigation} = props;
   const cameraRef = useRef('camera');
-  const listenerRef = useRef('listener');
-  const [containerOpacity, setContainerOpacity] = useState(
-    new Animated.Value(0),
-  );
+  const playerStateListener = useRef(null);
+  const [containerOpacity] = useState(new Animated.Value(0));
 
-  const [track, setTrack] = useState(null);
-  const [isPaused, setIsPaused] = useState(true);
-  //Tells listener to not update
-  const [trackDeleted, setTrackDeleted] = useState(false);
-
-  const [playbackPosition, setPlaybackPosition] = useState(null);
   const [takingVideo, setTakingVideo] = useState(false);
   const [cameraType, setCameraType] = useState(RNCamera.Constants.Type.back);
   const [exposure, setExposure] = useState(2);
@@ -37,9 +34,7 @@ const CameraScreen = ({route, navigation}) => {
     x: null,
     y: null,
   });
-  const [focusPointOpacity, setFocusPointOpacity] = useState(
-    new Animated.Value(0),
-  );
+  const [focusPointOpacity] = useState(new Animated.Value(0));
 
   const {height, width} = Dimensions.get('screen');
 
@@ -51,58 +46,52 @@ const CameraScreen = ({route, navigation}) => {
     _subscribeToEvents();
 
     return () => {
-      // this.eventListener.remove();
-      //SpotifyModule.pause();
+      if (playerStateListener.current === null) return;
+      playerStateListener.current.remove();
     };
   }, []);
 
   const _attachListener = () => {
     const eventEmitter = new NativeEventEmitter(SpotifyModule);
-    listenerRef.current = eventEmitter.addListener('playerState', (event) => {
-      //check if song is already selected
-      if (event.trackUri != null) {
-        setTrack({name: event.trackName, uri: event.trackUri});
-        setIsPaused(event.isPaused);
+    playerStateListener.current = eventEmitter.addListener(
+      'playerState',
+      (event) => {
+        /*
+      event:{
+        isPaused,
+        nameame,
+        uri,
+        playbackPosition
       }
-    });
+      */
+        if (event.uri == null) return;
+        _setCurrentTrack(event);
+      },
+    );
+  };
+
+  const _setCurrentTrack = (event) => {
+    let {name, uri, isPaused} = event;
+    let currentTrack = new CurrentTrack(name, uri, isPaused);
+    props.ActionSetCurrentTrack(currentTrack);
   };
 
   const _takePicture = async () => {
-    await cameraRef.current
-      .takePictureAsync({pauseAfterCapture: false})
-      .then((image) => {
-        navigation.navigate('ImageConfirmation', {image});
-      });
+    await cameraRef.current.takePictureAsync().then((image) => {
+      navigation.navigate('ImageConfirmation', {image});
+    });
   };
 
   const _takeVideo = async () => {
-    let trackPlaybackPositionAtStart = null;
-
-    if (track !== null) {
-      await SpotifyModule.getTrackProgression((trackProgression) => {
-        trackPlaybackPositionAtStart = trackProgression.playbackPosition;
-        if (isPaused) {
-          SpotifyModule.resume();
-        }
-      });
-    }
-
     setTakingVideo(true);
-
     await cameraRef.current
       .recordAsync({quality: RNCamera.Constants.VideoQuality['1080p']})
       .then(async (video) => {
         setTakingVideo(false);
-        navigation.navigate(
-          'VideoConfirmation',
-          track !== null
-            ? {
-                video,
-                track,
-                trackPlaybackPositionAtStart,
-              }
-            : {video, track: null, trackPlaybackPositionAtStart: null},
-        );
+        navigation.navigate('VideoConfirmation', {
+          video,
+          track,
+        });
       });
   };
 
@@ -119,7 +108,7 @@ const CameraScreen = ({route, navigation}) => {
 
     Animated.timing(focusPointOpacity, {
       toValue: 1,
-      duration: 500,
+      duration: 250,
       useNativeDriver: true,
     }).start();
 
@@ -138,16 +127,10 @@ const CameraScreen = ({route, navigation}) => {
     });
   };
 
-  const _addText = () => {
-    navigation.navigate('AddText');
-  };
-
   const _changeCameraType = () => {
-    if (cameraType == RNCamera.Constants.Type.back) {
-      setCameraType(RNCamera.Constants.Type.front);
-    } else {
-      setCameraType(RNCamera.Constants.Type.back);
-    }
+    cameraType == RNCamera.Constants.Type.back
+      ? setCameraType(RNCamera.Constants.Type.front)
+      : setCameraType(RNCamera.Constants.Type.back);
   };
 
   _fadeContainerIn = () => {
@@ -157,8 +140,13 @@ const CameraScreen = ({route, navigation}) => {
       useNativeDriver: true,
     }).start();
   };
-  const _checkIfImageTaken = () => {
-    return (
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: 'white',
+      }}>
       <Animated.View
         style={{
           flex: 1,
@@ -172,12 +160,12 @@ const CameraScreen = ({route, navigation}) => {
           onTap={(event) => _focus(event)}
           onCameraReady={() => _fadeContainerIn()}
           useNativeZoom={true}
-          captureAudio={track !== null ? false : true}
+          captureAudio={true}
           autoFocus={RNCamera.Constants.AutoFocus.on}
-          autoFocusPointOfInterest={poi}
           style={[styles.camera, {aspectRatio: 3 / 4}]}
           type={cameraType}
           exposure={exposure}
+          autoFocusPointOfInterest={poi}
           ref={cameraRef}
           androidCameraPermissionOptions={{
             title: 'Permission to use camera',
@@ -194,7 +182,6 @@ const CameraScreen = ({route, navigation}) => {
           <Animated.View
             style={[
               styles.view_focus_point,
-
               {
                 left: focusPointVisible.x - 25,
                 top: focusPointVisible.y - 0 - 25,
@@ -217,7 +204,7 @@ const CameraScreen = ({route, navigation}) => {
             bottom: 0,
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
           }}>
-          {track !== null ? (
+          {currentTrack !== null ? (
             <View
               style={{
                 alignSelf: 'center',
@@ -232,17 +219,15 @@ const CameraScreen = ({route, navigation}) => {
               }}>
               <TouchableOpacity
                 onPress={() => {
-                  if (isPaused) {
-                    SpotifyModule.resume();
-                  } else {
-                    SpotifyModule.pause();
-                  }
+                  currentTrack.isPaused
+                    ? SpotifyModule.resume()
+                    : SpotifyModule.pause();
                 }}>
                 <Image
                   source={
-                    isPaused == false
-                      ? require('Nectar/src/images/image_pause_icon.png')
-                      : require('Nectar/src/images/image_play_icon.png')
+                    currentTrack.isPaused
+                      ? require('Nectar/src/images/image_play_icon.png')
+                      : require('Nectar/src/images/image_pause_icon.png')
                   }
                   style={{
                     height: 32,
@@ -258,32 +243,14 @@ const CameraScreen = ({route, navigation}) => {
                 numberOfLines={1}
                 style={{
                   marginStart: 8,
-                  marginEnd: 4,
+                  marginEnd: 16,
                   marginVertical: 4,
                   fontWeight: 'bold',
                   fontSize: 12,
                   flexShrink: 1,
                 }}>
-                {track.name}
+                {currentTrack.name}
               </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  listenerRef.current.remove();
-                  SpotifyModule.pause();
-                  setTrack(null);
-                  setTimeout(() => {
-                    _attachListener();
-                  }, 500);
-                }}>
-                <Image
-                  source={require('Nectar/src/images/image_delete_icon.png')}
-                  style={{
-                    height: 20,
-                    width: 20,
-                    opacity: 0.6,
-                    marginEnd: 12,
-                  }}></Image>
-              </TouchableOpacity>
             </View>
           ) : null}
 
@@ -332,7 +299,7 @@ const CameraScreen = ({route, navigation}) => {
             </View>
             <View style={styles.view_mode_selector_open_button_container}>
               <TouchableOpacity
-                onPress={() => _addText()}
+                onPress={() => navigation.navigate('AddNote')}
                 style={styles.touchable_mode_selector_button}>
                 <Text style={styles.text_plus_sign}>Tt</Text>
               </TouchableOpacity>
@@ -347,18 +314,10 @@ const CameraScreen = ({route, navigation}) => {
           </TouchableOpacity>
         </View>
       </Animated.View>
-    );
-  };
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: 'white',
-      }}>
-      {_checkIfImageTaken()}
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   camera: {
     width: '100%',
@@ -447,4 +406,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 });
-export default CameraScreen;
+
+const mapStateToProps = (state) => {
+  return {
+    currentTrack: state.ReducerSetCurrentTrack.currentTrack,
+  };
+};
+
+export default connect(mapStateToProps, {ActionSetCurrentTrack})(CameraScreen);

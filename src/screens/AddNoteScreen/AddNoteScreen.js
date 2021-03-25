@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AddTextScreen = ({navigation}) => {
+const AddNoteScreen = ({navigation}) => {
   const [note, setNote] = useState('');
   const [notes, setNotes] = useState([]);
 
@@ -127,4 +127,4 @@ const styles = StyleSheet.create({
     margin: 8,
   },
 });
-export default AddTextScreen;
+export default AddNoteScreen;
