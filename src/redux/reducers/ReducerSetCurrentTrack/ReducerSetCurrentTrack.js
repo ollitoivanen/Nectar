@@ -1,6 +1,4 @@
 import {ACTION_SET_CURRENT_TRACK} from 'constants/constants';
-import {CurrentTrack} from 'constants/constants';
-let currentTrack = new CurrentTrack(null, null, null);
 let initialState = {currentTrack: null};
 
 export default ReducerSetCurrentTrack = (state = initialState, action) => {

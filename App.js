@@ -65,7 +65,7 @@ const App = () => {
               name="Gallery"
               component={GalleryScreen}></Stack.Screen>
             <Stack.Screen
-              name="AddText"
+              name="AddNote"
               component={AddNoteScreen}></Stack.Screen>
 
             <Stack.Screen
