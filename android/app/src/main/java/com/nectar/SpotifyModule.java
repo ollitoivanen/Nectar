@@ -6,6 +6,9 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+
+import java.lang.reflect.Array;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -17,7 +20,11 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableNativeArray;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -26,6 +33,7 @@ import com.facebook.react.bridge.ActivityEventListener;
 
 
 import com.spotify.protocol.client.Subscription;
+import com.spotify.protocol.types.Artist;
 import com.spotify.protocol.types.PlaybackPosition;
 import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Track;
@@ -91,10 +99,25 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
                                 .subscribeToPlayerState()
                                 .setEventCallback(playerState -> {
                                     WritableMap params = Arguments.createMap();
+
                                     final Track track = playerState.track;
+                                    List<Artist> artistsList = track.artists;
+                                   Artist[] artistsArray = new Artist[artistsList.size()];
+                                   artistsList.toArray(artistsArray);
+
+                                   WritableArray writableArray = Arguments.createArray();
+
+                                    for (int i = 0; i < artistsArray.length; i++) {
+                                        Artist artist = artistsArray[i];
+                                        String artistAsString = artistsArray[i].name;
+                                        writableArray.pushString(artistAsString);
+
+                                    }
+
                                     params.putBoolean("isPaused", playerState.isPaused);
                                     params.putString("name", track.name);
                                     params.putString("uri", track.uri);
+                                    params.putArray("artists", writableArray);
                                     //params.putInt("playbackPosition", (int)playerState.playbackPosition);
                                     sendEvent(getReactApplicationContext(), "playerState", params);
                                 });

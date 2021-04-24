@@ -15,13 +15,14 @@ const NoteDetailScreen = ({route, navigation}) => {
   const [optionsModalHeight, setOptionsModalHeight] = useState(
     new Animated.Value(-300),
   );
-  const originalNote = route.params.note.node.note;
+  const originalNote = route.params.journalItem.node.note;
   const [note, setNote] = useState(originalNote);
   const _deleteNote = async () => {
     const value = await AsyncStorage.getItem('notes');
     let notesArray = JSON.parse(value);
     let deletableNoteIndex = notesArray.findIndex(
-      (note) => route.params.note.node.note === note.node.note,
+      (journalItem) =>
+        route.params.journalItem.node.note === journalItem.node.note,
     );
     notesArray.splice(deletableNoteIndex, 1);
     await AsyncStorage.setItem('notes', JSON.stringify(notesArray)).then(() => {
@@ -32,12 +33,13 @@ const NoteDetailScreen = ({route, navigation}) => {
     const value = await AsyncStorage.getItem('notes');
     let notesArray = JSON.parse(value);
     let editableNoteIndex = notesArray.findIndex(
-      (note) => route.params.note.node.timestamp === note.node.timestamp,
+      (journalItem) =>
+        route.params.journalItem.node.timestamp === journalItem.node.timestamp,
     );
 
     notesArray.splice(editableNoteIndex, 1, {
       node: {
-        timestamp: route.params.note.node.timestamp,
+        timestamp: route.params.journalItem.node.timestamp,
         note: note,
         type: 'note',
       },
@@ -47,7 +49,7 @@ const NoteDetailScreen = ({route, navigation}) => {
     });
   };
   const _formatTime = () => {
-    let unix_timestamp = route.params.note.node.timestamp;
+    let unix_timestamp = route.params.journalItem.node.timestamp;
 
     let date = new Date(unix_timestamp * 1000);
     let weekdays = [

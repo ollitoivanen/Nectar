@@ -1,43 +1,94 @@
-import React, {useState} from 'react';
-import {StyleSheet, View, TouchableOpacity, Text, Image} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Text,
+  Animated,
+  Dimensions,
+} from 'react-native';
 import CameraRoll from '@react-native-community/cameraroll';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const ImageConfirmationScreen = ({route, navigation}) => {
-  const {image} = route.params;
+import {CAMERA_STATE_VIEW_FINDER, _concatArtists} from 'constants/constants';
+import PrintedImageComponent from 'PrintedImageComponent/PrintedImageComponent';
+
+import {connect} from 'react-redux';
+import ActionSetCameraState from 'ActionSetCameraState/ActionSetCameraState';
+
+const ImageConfirmationScreen = (props) => {
+  const {height} = Dimensions.get('screen');
+  const [imageContainerPosition] = useState(new Animated.Value(height));
+
+  const {route, navigation} = props;
+  const {image, track} = route.params;
+  const imageUri = image.uri;
+  const {name, uri, artists} = track;
+
+  useEffect(() => {
+    _slideImageConatainerIn();
+  }, []);
+
+  const _slideImageConatainerIn = () => {
+    Animated.timing(imageContainerPosition, {
+      toValue: 0,
+      duration: 750,
+      useNativeDriver: false,
+    }).start();
+  };
 
   const _discardImage = () => {
+    props.ActionSetCameraState(CAMERA_STATE_VIEW_FINDER);
     navigation.goBack();
   };
 
   const _saveImage = () => {
-    CameraRoll.save(image.uri, {album: 'Nectar'}).then(() => {
-      _discardImage();
+    CameraRoll.save(imageUri, {album: 'Nectar'}).then(async () => {
+      await _saveImageTrack();
     });
   };
 
-  const _checkImageOrientation = () => {
-    let aspectRatio = 3 / 4;
-    if (image.pictureOrientation == 1 || image.pictureOrientation == 2) {
-      aspectRatio = 3 / 4;
-    } else if (image.pictureOrientation == 3 || image.pictureOrientation == 4) {
-      aspectRatio = 4 / 3;
-    }
-
-    return (
-      <Image
-        style={{
-          width: '100%',
-          aspectRatio: aspectRatio,
-        }}
-        key={image.uri}
-        source={{uri: image.uri}}></Image>
-    );
+  const _saveImageTrack = async () => {
+    let oldImageTracks = [];
+    try {
+      const value = await AsyncStorage.getItem('imageTracks');
+      if (value != null) {
+        oldImageTracks = JSON.parse(value);
+      }
+      await _saveUpdatedImageTracks(oldImageTracks);
+    } catch (error) {}
   };
+
+  _saveUpdatedImageTracks = async (oldImageTracks) => {
+    try {
+      let ts = Math.round(new Date().getTime() / 1000);
+      oldImageTracks.push({
+        node: {
+          timestamp: ts,
+          track: {
+            uri,
+            name,
+            artists: _concatArtists(artists),
+          },
+          type: 'imageTrack',
+        },
+      });
+      await AsyncStorage.setItem('imageTracks', JSON.stringify(oldImageTracks));
+    } catch (e) {}
+  };
+
   return (
-    <View style={{flex: 1, backgroundColor: 'white', alignItems: 'center'}}>
-      <View style={styles.view_image_container}>
-        {_checkImageOrientation()}
-      </View>
+    <View style={styles.view_container}>
+      <Animated.View
+        style={{
+          transform: [
+            {
+              translateY: imageContainerPosition,
+            },
+          ],
+        }}>
+        <PrintedImageComponent imageUri={imageUri} track={track} />
+      </Animated.View>
       <View style={styles.view_savedelete_container}>
         <TouchableOpacity
           style={styles.view_delete_button}
@@ -54,8 +105,19 @@ const ImageConfirmationScreen = ({route, navigation}) => {
   );
 };
 const styles = StyleSheet.create({
+  view_container: {
+    flex: 1,
+    backgroundColor: 'white',
+    alignItems: 'center',
+  },
   view_image_container: {
-    width: '100%',
+    width: '95%',
+    marginTop: '10%',
+    elevation: 8,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 12,
+    paddingBottom: 64,
   },
   view_delete_button: {
     backgroundColor: 'white',
@@ -83,8 +145,9 @@ const styles = StyleSheet.create({
   view_savedelete_container: {
     width: '100%',
     flexDirection: 'row',
+    position: 'absolute',
+    bottom: 16,
   },
-
   text_save: {
     margin: 8,
     fontWeight: 'bold',
@@ -98,4 +161,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-export default ImageConfirmationScreen;
+const mapStateToProps = (state) => {
+  return {};
+};
+
+export default connect(mapStateToProps, {ActionSetCameraState})(
+  ImageConfirmationScreen,
+);

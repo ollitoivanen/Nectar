@@ -11,17 +11,17 @@ import {
 import CameraRoll from '@react-native-community/cameraroll';
 
 const ImageDetailScreen = ({route, navigation}) => {
-  const [optionsModalHeight, setOptionsModalHeight] = useState(
-    new Animated.Value(-300),
-  );
+  const [optionsModalHeight] = useState(new Animated.Value(-300));
   const _deleteImage = () => {
-    CameraRoll.deletePhotos([route.params.image.node.image.uri]).then(() => {
-      navigation.navigate('Gallery');
-    });
+    CameraRoll.deletePhotos([route.params.journalItem.node.image.uri]).then(
+      () => {
+        navigation.navigate('Gallery');
+      },
+    );
   };
 
   const _formatTime = () => {
-    let unix_timestamp = route.params.image.node.timestamp;
+    let unix_timestamp = route.params.journalItem.node.timestamp;
 
     let date = new Date(unix_timestamp * 1000);
     let weekdays = [
@@ -92,7 +92,7 @@ const ImageDetailScreen = ({route, navigation}) => {
 
   const _checkImageOrientation = () => {
     let aspectRatio = 3 / 4;
-    let {image} = route.params.image.node;
+    let {image} = route.params.journalItem.node;
     if (Platform.OS == 'android') {
       if (image.orientation == 90 || image.orientation == 270) {
         aspectRatio = image.height / image.width;
@@ -109,7 +109,7 @@ const ImageDetailScreen = ({route, navigation}) => {
       <View style={{flex: 1, width: '95%', justifyContent: 'center'}}>
         <Image
           style={{width: '100%', aspectRatio: _checkImageOrientation()}}
-          source={{uri: route.params.image.node.image.uri}}></Image>
+          source={{uri: route.params.journalItem.node.image.uri}}></Image>
         <Text
           style={{
             fontFamily: 'Merriweather-Light',

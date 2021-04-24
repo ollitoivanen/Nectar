@@ -12,6 +12,11 @@ import Video from 'react-native-video';
 import CameraRoll from '@react-native-community/cameraroll';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import {CAMERA_STATE_VIEW_FINDER} from 'constants/constants';
+
+import {connect} from 'react-redux';
+import ActionSetCameraState from 'ActionSetCameraState/ActionSetCameraState';
+
 const VideoConfirmationScreen = ({route, navigation}) => {
   const [beginning, setBeginning] = useState(true);
   const [paused, setPaused] = useState(false);
@@ -119,7 +124,7 @@ const VideoConfirmationScreen = ({route, navigation}) => {
   const _saveVideo = async () => {
     CameraRoll.save(video.uri, {type: 'photo', album: 'Nectar'}).then(
       async () => {
-        if (track !== null) {
+        /*if (track !== null) {
           const searchedTrack = await _searchTrackWeb();
           try {
             const value = await AsyncStorage.getItem('videoTracks');
@@ -157,16 +162,13 @@ const VideoConfirmationScreen = ({route, navigation}) => {
                 navigation.popToTop();
               });
             } catch (e) {
-              console.warn(e);
               // saving error
             }
           } catch (e) {
-            console.warn(e);
             // error reading value
           }
-        } else {
-          navigation.popToTop();
-        }
+        } else {}*/
+        navigation.popToTop();
       },
     );
   };
@@ -300,4 +302,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-export default VideoConfirmationScreen;
+const mapStateToProps = (state) => {
+  return {};
+};
+
+export default connect(mapStateToProps, {ActionSetCameraState})(
+  VideoConfirmationScreen,
+);
