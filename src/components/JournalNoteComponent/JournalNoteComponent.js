@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
 
   text_note: {
     textAlign: 'left',
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: 'Merriweather-Regular',
   },
 });

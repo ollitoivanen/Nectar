@@ -2,6 +2,8 @@ import React from 'react';
 import {SafeAreaView, StatusBar, StyleSheet} from 'react-native';
 import 'react-native-gesture-handler';
 
+import {connect} from 'react-redux';
+
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 
@@ -17,64 +19,74 @@ import ImageConfirmationScreen from 'ImageConfirmationScreen/ImageConfirmationSc
 import VideoConfirmationScreen from 'VideoConfirmationScreen/VideoConfirmationScreen';
 import VideoDetailScreen from 'VideoDetailScreen/VideoDetailScreen';
 
-const NavigationStackContainer = () => {
+const NavigationStackContainer = (props) => {
+  const {loadingState} = props;
   const Stack = createStackNavigator();
 
-  return (
-    <NavigationContainer>
-      <SafeAreaView style={styles.container}>
-        <StatusBar
-          barStyle={'dark-content'}
-          backgroundColor={'white'}
-          hidden={true}
-        />
-        <Stack.Navigator
-          mode={'modal'}
-          screenOptions={{
-            headerShown: false,
-            gestureDirection: 'horizontal',
-          }}>
-          <Stack.Screen
-            initialParams={{track: null}}
-            name="Camera"
-            component={CameraScreen}></Stack.Screen>
+  const _checkLoadingState = () => {
+    if (loadingState) return null;
+    return (
+      <NavigationContainer>
+        <SafeAreaView style={styles.container}>
+          <StatusBar
+            barStyle={'dark-content'}
+            backgroundColor={'white'}
+            hidden={true}
+          />
+          <Stack.Navigator
+            mode={'modal'}
+            screenOptions={{
+              headerShown: false,
+              gestureDirection: 'horizontal',
+            }}>
+            <Stack.Screen
+              initialParams={{track: null}}
+              name="Camera"
+              component={CameraScreen}></Stack.Screen>
 
-          <Stack.Screen
-            options={{animationEnabled: false}}
-            name="ImageConfirmation"
-            component={ImageConfirmationScreen}></Stack.Screen>
+            <Stack.Screen
+              options={{animationEnabled: false}}
+              name="ImageConfirmation"
+              component={ImageConfirmationScreen}></Stack.Screen>
 
-          <Stack.Screen
-            name="VideoConfirmation"
-            component={VideoConfirmationScreen}></Stack.Screen>
+            <Stack.Screen
+              name="VideoConfirmation"
+              component={VideoConfirmationScreen}></Stack.Screen>
 
-          <Stack.Screen
-            name="SpotifySearch"
-            component={SpotifySearchScreen}></Stack.Screen>
-          <Stack.Screen
-            name="TrackConfirmation"
-            component={TrackConfirmationScreen}></Stack.Screen>
+            <Stack.Screen
+              name="SpotifySearch"
+              component={SpotifySearchScreen}></Stack.Screen>
+            <Stack.Screen
+              name="TrackConfirmation"
+              component={TrackConfirmationScreen}></Stack.Screen>
 
-          <Stack.Screen
-            name="TrackDetail"
-            component={TrackDetailScreen}></Stack.Screen>
+            <Stack.Screen
+              name="TrackDetail"
+              component={TrackDetailScreen}></Stack.Screen>
 
-          <Stack.Screen name="Gallery" component={GalleryScreen}></Stack.Screen>
-          <Stack.Screen name="AddNote" component={AddNoteScreen}></Stack.Screen>
+            <Stack.Screen
+              name="Gallery"
+              component={GalleryScreen}></Stack.Screen>
+            <Stack.Screen
+              name="AddNote"
+              component={AddNoteScreen}></Stack.Screen>
 
-          <Stack.Screen
-            name="ImageDetail"
-            component={ImageDetailScreen}></Stack.Screen>
-          <Stack.Screen
-            name="NoteDetail"
-            component={NoteDetailScreen}></Stack.Screen>
-          <Stack.Screen
-            name="VideoDetail"
-            component={VideoDetailScreen}></Stack.Screen>
-        </Stack.Navigator>
-      </SafeAreaView>
-    </NavigationContainer>
-  );
+            <Stack.Screen
+              name="ImageDetail"
+              component={ImageDetailScreen}></Stack.Screen>
+            <Stack.Screen
+              name="NoteDetail"
+              component={NoteDetailScreen}></Stack.Screen>
+            <Stack.Screen
+              name="VideoDetail"
+              component={VideoDetailScreen}></Stack.Screen>
+          </Stack.Navigator>
+        </SafeAreaView>
+      </NavigationContainer>
+    );
+  };
+
+  return _checkLoadingState();
 };
 const styles = StyleSheet.create({
   container: {
@@ -82,4 +94,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
 });
-export default NavigationStackContainer;
+const mapStateToProps = (state) => {
+  return {
+    loadingState: state.ReducerLoadingState.loadingState,
+  };
+};
+export default connect(mapStateToProps, {})(NavigationStackContainer);

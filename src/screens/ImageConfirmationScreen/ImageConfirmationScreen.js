@@ -1,94 +1,39 @@
-import React, {useState, useEffect} from 'react';
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  Text,
-  Animated,
-  Dimensions,
-} from 'react-native';
+import React from 'react';
+import {StyleSheet, View, TouchableOpacity, Text, Image} from 'react-native';
 import CameraRoll from '@react-native-community/cameraroll';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFS from 'react-native-fs';
 
 import {CAMERA_STATE_VIEW_FINDER, _concatArtists} from 'constants/constants';
-import PrintedImageComponent from 'PrintedImageComponent/PrintedImageComponent';
 
 import {connect} from 'react-redux';
 import ActionSetCameraState from 'ActionSetCameraState/ActionSetCameraState';
 
 const ImageConfirmationScreen = (props) => {
-  const {height} = Dimensions.get('screen');
-  const [imageContainerPosition] = useState(new Animated.Value(height));
-
   const {route, navigation} = props;
-  const {image, track} = route.params;
+  const {image} = route.params;
   const imageUri = image.uri;
-  const {name, uri, artists} = track;
-
-  useEffect(() => {
-    _slideImageConatainerIn();
-  }, []);
-
-  const _slideImageConatainerIn = () => {
-    Animated.timing(imageContainerPosition, {
-      toValue: 0,
-      duration: 750,
-      useNativeDriver: false,
-    }).start();
-  };
 
   const _discardImage = () => {
+    RNFS.unlink(imageUri); // Remove image from cache
     props.ActionSetCameraState(CAMERA_STATE_VIEW_FINDER);
     navigation.goBack();
   };
 
   const _saveImage = () => {
-    CameraRoll.save(imageUri, {album: 'Nectar'}).then(async () => {
-      await _saveImageTrack();
+    CameraRoll.save(imageUri, {album: 'Nectar'}).then(() => {
+      _discardImage();
     });
-  };
-
-  const _saveImageTrack = async () => {
-    let oldImageTracks = [];
-    try {
-      const value = await AsyncStorage.getItem('imageTracks');
-      if (value != null) {
-        oldImageTracks = JSON.parse(value);
-      }
-      await _saveUpdatedImageTracks(oldImageTracks);
-    } catch (error) {}
-  };
-
-  _saveUpdatedImageTracks = async (oldImageTracks) => {
-    try {
-      let ts = Math.round(new Date().getTime() / 1000);
-      oldImageTracks.push({
-        node: {
-          timestamp: ts,
-          track: {
-            uri,
-            name,
-            artists: _concatArtists(artists),
-          },
-          type: 'imageTrack',
-        },
-      });
-      await AsyncStorage.setItem('imageTracks', JSON.stringify(oldImageTracks));
-    } catch (e) {}
   };
 
   return (
     <View style={styles.view_container}>
-      <Animated.View
+      <Image
         style={{
-          transform: [
-            {
-              translateY: imageContainerPosition,
-            },
-          ],
-        }}>
-        <PrintedImageComponent imageUri={imageUri} track={track} />
-      </Animated.View>
+          width: '95%',
+          aspectRatio: 3 / 4,
+        }}
+        key={imageUri}
+        source={{uri: imageUri}}></Image>
       <View style={styles.view_savedelete_container}>
         <TouchableOpacity
           style={styles.view_delete_button}
@@ -109,6 +54,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     alignItems: 'center',
+    paddingTop: '10%',
   },
   view_image_container: {
     width: '95%',

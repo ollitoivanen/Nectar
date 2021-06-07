@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -9,16 +9,22 @@ import {
 } from 'react-native';
 const {SpotifyModule} = NativeModules;
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import JournalItemOptionsComponent from 'JournalItemOptionsComponent/JournalItemOptionsComponent';
 
 const TrackDetailScreen = ({route, navigation}) => {
-  const {track} = route.params.track.node;
+  const {track} = route.params;
   const [playing, setPlaying] = useState(null);
+  const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+
+  const _changeOptionsModalVisibility = (toVisibility) => {
+    setOptionsModalVisible(toVisibility);
+  };
 
   const _deleteTrack = async () => {
     const value = await AsyncStorage.getItem('tracks');
     let tracksArray = JSON.parse(value);
     let deletableTrackIndex = tracksArray.findIndex(
-      (track) => route.params.track.node.track.id === track.node.track.id,
+      (indexTrack) => route.params.track.id === indexTrack.node.track.id,
     );
     tracksArray.splice(deletableTrackIndex, 1);
     await AsyncStorage.setItem('tracks', JSON.stringify(tracksArray)).then(
@@ -30,7 +36,7 @@ const TrackDetailScreen = ({route, navigation}) => {
 
   return (
     <View style={styles.container}>
-      <View style={{flex: 1, alignItems: 'center', width: '80%'}}>
+      <View style={{flex: 1, alignItems: 'center', width: '95%'}}>
         <Image
           source={{uri: track.albumImage}}
           style={{
@@ -90,15 +96,12 @@ const TrackDetailScreen = ({route, navigation}) => {
           <TouchableOpacity
             onPress={() => {
               if (playing == null) {
-                _startTrackProgress();
-                SpotifyModule.playSong(track.uri);
+                SpotifyModule.playTrack(track.uri);
                 setPlaying(true);
               } else if (playing === false) {
-                _startTrackProgress();
                 SpotifyModule.resume();
                 setPlaying(true);
               } else if (playing === true) {
-                _pauseTrackProgress();
                 SpotifyModule.pause();
                 setPlaying(false);
               }
@@ -123,9 +126,8 @@ const TrackDetailScreen = ({route, navigation}) => {
       <View
         style={{
           flexDirection: 'row',
-          width: '100%',
           alignItems: 'center',
-          marginBottom: 8,
+          width: '100%',
         }}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -134,54 +136,18 @@ const TrackDetailScreen = ({route, navigation}) => {
             style={styles.image_backarrow}
             source={require('Nectar/src/images/image_downarrow.png')}></Image>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={{
-            borderWidth: 2,
-            borderRadius: 50,
-            borderColor: 'black',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginHorizontal: 8,
-            marginVertical: 8,
-            flex: 1,
-            backgroundColor: 'black',
-          }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: 'Merriweather-Bold',
-              fontSize: 14,
-              color: 'white',
-              margin: 8,
-            }}>
-            Use in a video
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => _deleteTrack()}
-          style={{
-            borderWidth: 2,
-            borderRadius: 50,
-            borderColor: 'black',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginHorizontal: 8,
-            marginVertical: 8,
-            flex: 1,
-          }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: 'Merriweather-Bold',
-              fontSize: 14,
-              color: 'black',
-              margin: 8,
-            }}>
-            Delete
-          </Text>
+        <TouchableOpacity onPress={() => _changeOptionsModalVisibility(true)}>
+          <Text style={{fontSize: 20, marginHorizontal: 24}}>⋮</Text>
         </TouchableOpacity>
       </View>
+      {optionsModalVisible ? (
+        <JournalItemOptionsComponent
+          _changeOptionsModalVisibility={(toVisibility) =>
+            _changeOptionsModalVisibility(toVisibility)
+          }
+          _deleteItem={() => _deleteTrack()}
+        />
+      ) : null}
     </View>
   );
 };
@@ -193,15 +159,14 @@ const styles = StyleSheet.create({
   },
 
   view_back_button_container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    paddingVertical: 16,
+    paddingStart: 16,
+    flex: 1,
   },
   image_backarrow: {
-    height: 26,
-    width: 26,
+    height: 30,
+    width: 30,
     transform: [{rotate: '90deg'}],
-    margin: 16,
   },
 });
 export default TrackDetailScreen;

@@ -3,6 +3,8 @@ export const ACTION_SET_CAMERA_EXPOSURE = 'ActionSetCameraExposure';
 export const ACTION_SET_CAMERA_STATE = 'ActionSetCameraState';
 export const ACTION_SET_CAMERA_TYPE = 'ActionSetCameraType';
 export const ACTION_SET_FOCUS_MARKER_LOCATION = 'ActionSetFocusMarkerLocation';
+export const ACTION_SET_LOADING_STATE = 'ActionSetLoadingState';
+export const ACTION_SET_SPOTIFY_APP_REMOTE_STATE = ' ActionSetAppRemoteState';
 
 //Camera states
 
@@ -10,6 +12,9 @@ export const CAMERA_STATE_VIEW_FINDER = 'viewFinder';
 export const CAMERA_STATE_TAKING_VIDEO = 'takingVideo';
 export const CAMERA_STATE_VIDEO_TAKEN = 'videoTaken';
 export const CAMERA_STATE_IMAGE_TAKEN = 'imageTaken';
+
+//Spotify access states
+export const USER_DENIED_ACCESS = 'UserDeniedAccess';
 
 //Classes
 

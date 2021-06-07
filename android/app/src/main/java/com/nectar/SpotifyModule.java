@@ -61,6 +61,7 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
     private static final String CLIENT_ID = "da5f89a896fd4380a59db2ec52e64d93";
     private static final String REDIRECT_URI = "nectar://callback";
     private Promise authPromise;
+    private Promise appRemotePromise;
 
     private SpotifyAppRemote mSpotifyAppRemote;
 
@@ -83,7 +84,8 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
     }
 
     @ReactMethod
-    public void subscribeToAppRemote(){
+    public void subscribeToAppRemote(Promise promise){
+        appRemotePromise = promise;
         ConnectionParams connectionParams =
                 new ConnectionParams.Builder(CLIENT_ID)
                         .setRedirectUri(REDIRECT_URI)
@@ -95,7 +97,13 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
 
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                         mSpotifyAppRemote = spotifyAppRemote;
-                        mSpotifyAppRemote.getPlayerApi()
+                        appRemotePromise.resolve(true);
+
+
+                        //Not in use at 1.0
+
+
+                      /*  mSpotifyAppRemote.getPlayerApi()
                                 .subscribeToPlayerState()
                                 .setEventCallback(playerState -> {
                                     WritableMap params = Arguments.createMap();
@@ -120,7 +128,7 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
                                     params.putArray("artists", writableArray);
                                     //params.putInt("playbackPosition", (int)playerState.playbackPosition);
                                     sendEvent(getReactApplicationContext(), "playerState", params);
-                                });
+                                });*/
 
 
                         // Now you can start interacting with App Remote
@@ -128,6 +136,8 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
                     }
 
                     public void onFailure(Throwable throwable) {
+                        Log.d("Olliteed", throwable.getMessage());
+
                         // Something went wrong when attempting to connect! Handle errors here
                     }
                 });
@@ -157,7 +167,7 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
         AuthenticationRequest.Builder builder =
                 new AuthenticationRequest.Builder(CLIENT_ID, TOKEN, REDIRECT_URI);
 
-        builder.setScopes(new String[]{"streaming, user-top-read, user-modify-playback-state"});
+        builder.setScopes(new String[]{"streaming, user-top-read, user-modify-playback-state", "app-remote-control"});
         AuthenticationRequest request = builder.build();
 
         AuthenticationClient.openLoginActivity(getCurrentActivity(), REQUEST_CODE, request);
@@ -166,8 +176,8 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
 
 
     @ReactMethod
-    public void playSong(String songId) {
-        mSpotifyAppRemote.getPlayerApi().play(songId).setResultCallback(callback-> {
+    public void playTrack(String trackId) {
+        mSpotifyAppRemote.getPlayerApi().play(trackId).setResultCallback(callback-> {
         });
 
     }
@@ -194,7 +204,7 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
     }
 
     @ReactMethod
-    public void disconnect(){
+    public void disconnectFromAppRemote(){
         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
 
     }
@@ -234,12 +244,10 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
 
         if (requestCode == REQUEST_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, data);
-
             switch (response.getType()) {
                 // Response was successful and contains auth token
                 case TOKEN:
                         String token = response.getAccessToken();
-                        Log.d("MyApplication", "login success:" + token);
                         authPromise.resolve(token);
 
 
@@ -249,13 +257,14 @@ public class SpotifyModule extends ReactContextBaseJavaModule implements Activit
                 case ERROR:
                         String code = response.getCode();
                         String error = response.getError();
-                        Log.d("MyApplication", "login error:" + code);
+                        authPromise.resolve("error");
 
 
                     break;
 
                 // Most likely auth flow was cancelled
                 default:
+                    authPromise.resolve("error");
 
             }
         }

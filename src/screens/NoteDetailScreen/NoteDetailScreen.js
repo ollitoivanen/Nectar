@@ -1,20 +1,22 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   View,
   Image,
   TouchableOpacity,
   Text,
-  Animated,
   TextInput,
 } from 'react-native';
-import CameraRoll from '@react-native-community/cameraroll';
+import {weekdays, months} from 'constants/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import JournalItemOptionsComponent from 'JournalItemOptionsComponent/JournalItemOptionsComponent';
 
 const NoteDetailScreen = ({route, navigation}) => {
-  const [optionsModalHeight, setOptionsModalHeight] = useState(
-    new Animated.Value(-300),
-  );
+  const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+
+  const _changeOptionsModalVisibility = (toVisibility) => {
+    setOptionsModalVisible(toVisibility);
+  };
   const originalNote = route.params.journalItem.node.note;
   const [note, setNote] = useState(originalNote);
   const _deleteNote = async () => {
@@ -52,29 +54,6 @@ const NoteDetailScreen = ({route, navigation}) => {
     let unix_timestamp = route.params.journalItem.node.timestamp;
 
     let date = new Date(unix_timestamp * 1000);
-    let weekdays = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    let months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
 
     let dayOfTheWeek = weekdays[date.getDay()];
     let dayOfTheMonth = date.getDate();
@@ -101,21 +80,7 @@ const NoteDetailScreen = ({route, navigation}) => {
 
     return formattedTime;
   };
-  const _makeOptionsVisible = (toVisibilty) => {
-    if (toVisibilty === true) {
-      Animated.timing(optionsModalHeight, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
-    } else {
-      Animated.timing(optionsModalHeight, {
-        toValue: -300,
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
-    }
-  };
+
   return (
     <View style={styles.container}>
       <View style={{flex: 1, width: '95%', justifyContent: 'center'}}>
@@ -157,33 +122,18 @@ const NoteDetailScreen = ({route, navigation}) => {
             style={styles.image_backarrow}
             source={require('Nectar/src/images/image_downarrow.png')}></Image>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => _makeOptionsVisible(true)}>
+        <TouchableOpacity onPress={() => _changeOptionsModalVisibility(true)}>
           <Text style={{fontSize: 20, marginHorizontal: 24}}>⋮</Text>
         </TouchableOpacity>
       </View>
-      <Animated.View
-        style={{
-          position: 'absolute',
-          bottom: optionsModalHeight,
-          width: '100%',
-          backgroundColor: 'white',
-          borderTopWidth: 1,
-          borderTopColor: 'lightgray',
-          paddingTop: 8,
-        }}>
-        <TouchableOpacity
-          onPress={() => _deleteNote()}
-          style={styles.view_delete_button}>
-          <Text style={styles.text_delete}>Delete</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => _makeOptionsVisible(false)}
-          style={styles.view_journal_button_container}>
-          <Image
-            style={styles.image_downarrow}
-            source={require('Nectar/src/images/image_downarrow.png')}></Image>
-        </TouchableOpacity>
-      </Animated.View>
+      {optionsModalVisible ? (
+        <JournalItemOptionsComponent
+          _changeOptionsModalVisibility={(toVisibility) =>
+            _changeOptionsModalVisibility(toVisibility)
+          }
+          _deleteItem={() => _deleteNote()}
+        />
+      ) : null}
     </View>
   );
 };

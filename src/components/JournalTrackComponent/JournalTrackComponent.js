@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   touchable_container: {
     flex: 1,
     alignItems: 'center',
-    width: '80%',
+    width: '95%',
     alignSelf: 'center',
     marginVertical: 64,
   },
@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
+    marginStart: -20,
   },
   image_album_cover: {
     width: '100%',
@@ -57,13 +58,13 @@ const styles = StyleSheet.create({
   },
   text_track_name: {
     fontWeight: 'bold',
-    fontSize: 22,
+    fontSize: 20,
     marginTop: 32,
     textAlign: 'center',
   },
   text_artist: {
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 16,
     color: 'gray',
     marginStart: 6,
     textAlign: 'center',

@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   text_date: {
     fontFamily: 'Merriweather-Light',
     color: 'gray',
-    marginStart: 8,
+    marginStart: 12,
     marginTop: 8,
   },
 });

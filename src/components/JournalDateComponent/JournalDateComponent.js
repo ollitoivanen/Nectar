@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   },
   text_date: {
     textAlign: 'left',
-    fontSize: 18,
+    fontSize: 0,
     fontFamily: 'Merriweather-Bold',
     color: 'black',
   },

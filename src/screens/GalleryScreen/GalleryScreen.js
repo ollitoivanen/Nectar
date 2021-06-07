@@ -16,6 +16,7 @@ import JournalImageComponent from 'JournalImageComponent/JournalImageComponent';
 import JournalNoteComponent from 'JournalNoteComponent/JournalNoteComponent';
 import JournalTrackComponent from 'JournalTrackComponent/JournalTrackComponent';
 import JournalDateComponent from 'JournalDateComponent/JournalDateComponent';
+import JournalVideoComponent from 'JournalVideoComponent/JournalVideoComponent';
 
 const GalleryScreen = ({navigation}) => {
   const [fullList, setFullList] = useState([]);
@@ -42,18 +43,15 @@ const GalleryScreen = ({navigation}) => {
     let journalItems = await _loadJournalItems();
     if (journalItems.length == 0) return;
     let sortedJournalItems = _sortJournalItemsWithTimestamp(journalItems);
-    let journalItemsWithDate = _addDatesToJournalItems(sortedJournalItems);
-    setFullList(journalItemsWithDate);
+    setFullList(sortedJournalItems);
     setLoadingReady(true);
   };
 
   const _loadJournalItems = async () => {
     let imagesArray = await _loadImages();
-    let imageTracksArray = await _loadImageTracks();
-    let stitchedImagesArray = _stitchImageTracks(imagesArray, imageTracksArray);
     let notesArray = await _loadNotes();
     let tracksArray = await _loadTracks();
-    let journalItems = stitchedImagesArray.concat(notesArray, tracksArray);
+    let journalItems = imagesArray.concat(notesArray, tracksArray);
 
     if (journalItems == null) return [];
     return journalItems;
@@ -71,14 +69,6 @@ const GalleryScreen = ({navigation}) => {
       imArray = r.edges.reverse();
     });
     return imArray;
-  };
-
-  const _loadImageTracks = async () => {
-    try {
-      const value = await AsyncStorage.getItem('imageTracks');
-      if (value == null) return [];
-      return JSON.parse(value);
-    } catch (e) {}
   };
 
   const _loadTracks = async () => {
@@ -105,132 +95,6 @@ const GalleryScreen = ({navigation}) => {
     return journalItems;
   };
 
-  /*const _loadVideoTracks = async () => {
-    try {
-      const value = await AsyncStorage.getItem('videoTracks');
-      if (value == null) return [];
-      return JSON.parse(value);
-    } catch (e) {}
-  };*/
-
-  const _stitchImageTracks = (imagesArray, imageTracksArray) => {
-    return imagesArray.map((image) => {
-      const {timestamp} = image.node;
-
-      const foundImageTrack = _matchImageAndTrack(imageTracksArray, timestamp);
-      if (foundImageTrack == null) return image;
-
-      image.node.imageTrack = foundImageTrack;
-      image.node.type = 'imageWithTrack';
-      return image;
-    });
-  };
-
-  const _matchImageAndTrack = (imageTracksArray, timestamp) => {
-    return imageTracksArray.find((imageTrack) => {
-      let difference = imageTrack.node.timestamp - timestamp;
-      return difference > -10 && difference < 10;
-    });
-  };
-
-  const _addDatesToJournalItems = (sortedJournalItems) => {
-    let journalItemsWithDate = [];
-    sortedJournalItems.forEach((journalItem, index) => {
-      let journalItemsDate = new Date(journalItem.node.timestamp * 1000);
-      let itemsDayOfTheMonth = journalItemsDate.getDate();
-
-      if (index === 0) {
-        journalItemsWithDate = _addDateToJournalArray(
-          journalItemsWithDate,
-          journalItemsDate,
-          itemsDayOfTheMonth,
-        );
-        journalItemsWithDate = _addItemToJournalArray(
-          journalItemsWithDate,
-          journalItem,
-        );
-      } else {
-        let previousItemDate = new Date(
-          sortedJournalItems[index - 1].node.timestamp * 1000,
-        );
-        let previousItemDayOfTheMonth = previousItemDate.getDate();
-
-        if (
-          _checkIfSameDate(
-            journalItemsDate,
-            itemsDayOfTheMonth,
-            previousItemDate,
-            previousItemDayOfTheMonth,
-          )
-        ) {
-          journalItemsWithDate = _addDateToJournalArray(
-            journalItemsWithDate,
-            journalItemsDate,
-            itemsDayOfTheMonth,
-          );
-
-          journalItemsWithDate = _addItemToJournalArray(
-            journalItemsWithDate,
-            journalItem,
-          );
-        } else {
-          journalItemsWithDate = _addItemToJournalArray(
-            journalItemsWithDate,
-            journalItem,
-          );
-        }
-      }
-    });
-    return journalItemsWithDate;
-  };
-
-  const _checkIfSameDate = (
-    journalItemsDate,
-    itemsDayOfTheMonth,
-    previousItemDate,
-    previousItemDayOfTheMonth,
-  ) => {
-    return (
-      itemsDayOfTheMonth !== previousItemDayOfTheMonth ||
-      previousItemDate - journalItemsDate > 604800000
-    );
-  };
-
-  const _addDateToJournalArray = (
-    journalItemsWithDate,
-    journalItemsDate,
-    itemsDayOfTheMonth,
-  ) => {
-    journalItemsWithDate.push(
-      _calculateDate(journalItemsDate, itemsDayOfTheMonth),
-    );
-    return journalItemsWithDate;
-  };
-
-  const _addItemToJournalArray = (journalItemsWithDate, journalItem) => {
-    journalItemsWithDate.push(journalItem);
-    return journalItemsWithDate;
-  };
-
-  const _calculateDate = (date, itemsDayOfTheMonth) => {
-    let nowDate = new Date();
-    let nowDayOfTheMonth = nowDate.getDate();
-    if (nowDayOfTheMonth == itemsDayOfTheMonth && nowDate - date < 604800000) {
-      return {node: {date: 'Today', type: 'date', timestamp: date}};
-    } else {
-      let formattedDate = (
-        weekdays[date.getDay()] +
-        ' ' +
-        itemsDayOfTheMonth +
-        '.' +
-        months[date.getMonth()]
-      ).toString();
-      return {node: {date: formattedDate, type: 'date', timestamp: date}};
-    }
-    {
-    }
-  };
-
   const renderItem = ({item}) => {
     //renderitem has item property between
     let {type} = item.node;
@@ -239,14 +103,12 @@ const GalleryScreen = ({navigation}) => {
         return <JournalImageComponent journalItem={item} />;
       case 'image/jpeg':
         return <JournalImageComponent journalItem={item} />;
-      case 'imageWithTrack':
-        return <JournalImageComponent journalItem={item} />;
+      case 'video/mp4':
+        return <JournalVideoComponent journalItem={item} />;
       case 'note':
         return <JournalNoteComponent journalItem={item} />;
       case 'track':
         return <JournalTrackComponent journalItem={item} />;
-      case 'date':
-        return <JournalDateComponent journalItem={item} />;
       default:
         break;
     }

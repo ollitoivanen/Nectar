@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -9,36 +9,59 @@ import {
 } from 'react-native';
 const {SpotifyModule} = NativeModules;
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {_concatArtists} from 'constants/constants';
+import {connect} from 'react-redux';
 
-const TrackConfirmationScreen = ({route, navigation}) => {
+import ActionSetSpotifyAppRemoteState from 'ActionSetSpotifyAppRemoteState/ActionSetSpotifyAppRemoteState';
+
+const TrackConfirmationScreen = (props) => {
+  const {
+    spotifyAppRemoteState,
+    ActionSetSpotifyAppRemoteState,
+    route,
+    navigation,
+  } = props;
   const {track, token} = route.params;
   const {artists} = track;
-  const trackLength = track.duration_ms;
 
-  const [trackProgress, setTrackProgress] = useState(0);
   const [playing, setPlaying] = useState(null);
-  const trackProcessInterval = useRef(null);
 
-  useEffect(() => {
-    return () => {
-      if (trackProcessInterval.current) {
-        SpotifyModule.pause();
-        _pauseTrackProgress();
-      }
-    };
-  }, []);
-
-  const _startTrackProgress = () => {
-    trackProcessInterval.current = setInterval(() => {
-      setTrackProgress((oldProcess) => {
-        return oldProcess + 1000;
-      });
-    }, 1000);
+  const _changePlaybackState = async () => {
+    switch (playing) {
+      case null:
+        await _connectToSpotifyAppRemote().then(async () => {
+          _playTrack();
+        });
+        break;
+      case false:
+        _resumeTrack();
+        break;
+      case true:
+        _pauseTrack();
+        break;
+      default:
+        break;
+    }
   };
 
-  const _pauseTrackProgress = () => {
-    clearInterval(trackProcessInterval.current);
+  const _connectToSpotifyAppRemote = async () => {
+    if (spotifyAppRemoteState == true) return;
+    await SpotifyModule.subscribeToAppRemote();
+    ActionSetSpotifyAppRemoteState(true);
+  };
+
+  const _playTrack = () => {
+    setPlaying(true);
+    SpotifyModule.playTrack(track.uri);
+  };
+
+  const _resumeTrack = () => {
+    setPlaying(true);
+    SpotifyModule.resume();
+  };
+
+  const _pauseTrack = () => {
+    setPlaying(false);
+    SpotifyModule.pause();
   };
 
   const _saveTrack = async () => {
@@ -59,7 +82,7 @@ const TrackConfirmationScreen = ({route, navigation}) => {
               id: track.id,
               uri: track.uri,
               name: track.name,
-              length: trackLength,
+              length: track.durationms,
               artist: _concatArtists(artists),
               album: track.album.name,
               albumImage: track.album.images[0].url,
@@ -80,31 +103,14 @@ const TrackConfirmationScreen = ({route, navigation}) => {
     }
   };
 
-  const _chooseSongWeb = async () => {
-    let play = fetch('https://api.spotify.com/v1/me/player/play', {
-      headers: {
-        'Content-Type': 'application/json',
-
-        Authorization: 'Bearer ' + token,
-      },
-      method: 'PUT',
-      body: JSON.stringify({
-        uris: [track.uri],
-        position_ms: 0,
-      }),
+  const _concatArtists = () => {
+    return track.artists.map((artist, index, array) => {
+      if (index < array.length - 1) {
+        return artist.name + ', ';
+      } else {
+        return artist.name;
+      }
     });
-
-    let pause = fetch('https://api.spotify.com/v1/me/player/pause', {
-      headers: {
-        'Content-Type': 'application/json',
-
-        Authorization: 'Bearer ' + token,
-      },
-      method: 'PUT',
-    });
-
-    //
-    Promise.all([play, pause]);
   };
 
   return (
@@ -157,61 +163,22 @@ const TrackConfirmationScreen = ({route, navigation}) => {
           }}>
           {track.album.name}
         </Text>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <TouchableOpacity
-            onPress={() => {
-              if (playing == null) {
-                _startTrackProgress();
-                SpotifyModule.playSong(track.uri);
-                setPlaying(true);
-              } else if (playing === false) {
-                _startTrackProgress();
-                SpotifyModule.resume();
-                setPlaying(true);
-              } else if (playing === true) {
-                _pauseTrackProgress();
-                SpotifyModule.pause();
-                setPlaying(false);
-              }
-            }}>
-            <Image
-              source={
-                playing == true
-                  ? require('Nectar/src/images/image_pause_icon.png')
-                  : require('Nectar/src/images/image_play_icon.png')
-              }
-              style={{
-                height: 32,
-                width: 32,
-                margin: 8,
-                marginStart: 0,
-                opacity: 0.6,
-              }}></Image>
-          </TouchableOpacity>
 
-          <View
+        <TouchableOpacity onPress={() => _changePlaybackState()}>
+          <Image
+            source={
+              playing == true
+                ? require('Nectar/src/images/image_pause_icon.png')
+                : require('Nectar/src/images/image_play_icon.png')
+            }
             style={{
-              flex: 1,
-              height: 5,
-              backgroundColor: '#f0f0f0',
-              borderRadius: 10,
-              marginEnd: 20,
-            }}>
-            <View
-              style={{
-                width: ((trackProgress / trackLength) * 100).toString() + '%',
-                maxWidth: '100%',
-                height: 5,
-                backgroundColor: 'black',
-                borderRadius: 10,
-              }}></View>
-          </View>
-        </View>
+              height: 32,
+              width: 32,
+              margin: 8,
+              marginStart: 0,
+              opacity: 0.6,
+            }}></Image>
+        </TouchableOpacity>
       </View>
       <View
         style={{
@@ -228,33 +195,6 @@ const TrackConfirmationScreen = ({route, navigation}) => {
             source={require('Nectar/src/images/image_downarrow.png')}></Image>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={async () => {
-            await _chooseSongWeb();
-            navigation.navigate('Camera', {track});
-          }}
-          style={{
-            borderWidth: 2,
-            borderRadius: 50,
-            borderColor: 'black',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginHorizontal: 8,
-            marginVertical: 8,
-            flex: 1,
-            backgroundColor: 'black',
-          }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: 'Merriweather-Bold',
-              fontSize: 14,
-              color: 'white',
-              margin: 8,
-            }}>
-            Use in a video
-          </Text>
-        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => _saveTrack()}
           style={{
@@ -301,4 +241,13 @@ const styles = StyleSheet.create({
     margin: 16,
   },
 });
-export default TrackConfirmationScreen;
+const mapStateToProps = (state) => {
+  return {
+    spotifyAppRemoteState:
+      state.ReducerSpotifyAppRemoteState.spotifyAppRemoteState,
+  };
+};
+
+export default connect(mapStateToProps, {ActionSetSpotifyAppRemoteState})(
+  TrackConfirmationScreen,
+);

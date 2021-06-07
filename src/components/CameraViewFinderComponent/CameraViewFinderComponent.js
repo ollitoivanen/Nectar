@@ -13,7 +13,6 @@ import {
 
 import CameraFocusMarkerComponent from 'CameraFocusMarkerComponent/CameraFocusMarkerComponent';
 import CameraSwitchButtonComponent from 'CameraSwitchButtonComponent/CameraSwitchButtonComponent';
-import CurrentTrackComponent from 'CurrentTrackComponent/CurrentTrackComponent';
 import {useNavigation} from '@react-navigation/native';
 
 import ActionSetFocusMarkerLocation from 'ActionSetFocusMarkerLocation/ActionSetFocusMarkerLocation';
@@ -21,7 +20,7 @@ import {connect} from 'react-redux';
 
 const CameraViewFinderComponent = (props) => {
   const navigation = useNavigation();
-  const {exposure, cameraState, cameraType, currentTrack} = props;
+  const {exposure, cameraState, cameraType} = props;
   const cameraRef = useRef('camera');
   const [poi, setPoi] = useState({x: 0.5, y: 0.5, autoExposure: true});
   const {height, width} = Dimensions.get('screen');
@@ -61,15 +60,21 @@ const CameraViewFinderComponent = (props) => {
 
   const _takePicture = async () => {
     await cameraRef.current
-      .takePictureAsync({orientation: 'portrait'})
+      .takePictureAsync({
+        orientation: 'portrait',
+        doNotSave: false,
+      })
       .then((image) => {
-        navigation.navigate('ImageConfirmation', {image, track: currentTrack});
+        navigation.navigate('ImageConfirmation', {image});
       });
   };
 
   const _takeVideo = async () => {
     await cameraRef.current
-      .recordAsync({quality: RNCamera.Constants.VideoQuality['1080p']})
+      .recordAsync({
+        quality: RNCamera.Constants.VideoQuality['1080p'],
+        orientation: 'portrait',
+      })
       .then(async (video) => {
         navigation.navigate('VideoConfirmation', {video});
       });
@@ -99,7 +104,6 @@ const CameraViewFinderComponent = (props) => {
         <CameraFocusMarkerComponent />
         <CameraSwitchButtonComponent />
       </RNCamera>
-      {currentTrack == null ? null : <CurrentTrackComponent />}
     </View>
   );
 };
@@ -107,11 +111,7 @@ const styles = StyleSheet.create({
   view_container: {
     width: '95%',
     marginTop: '10%',
-    elevation: 8,
-    alignItems: 'center',
     backgroundColor: 'white',
-    padding: 12,
-    paddingBottom: 0,
   },
   camera_view_finder: {
     width: '100%',
@@ -124,7 +124,6 @@ const mapStateToProps = (state) => {
     exposure: state.ReducerCameraExposure.exposure,
     cameraState: state.ReducerCameraState.cameraState,
     cameraType: state.ReducerCameraType.cameraType,
-    currentTrack: state.ReducerCurrentTrack.currentTrack,
   };
 };
 export default connect(mapStateToProps, {ActionSetFocusMarkerLocation})(

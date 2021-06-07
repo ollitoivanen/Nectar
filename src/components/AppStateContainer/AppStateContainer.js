@@ -3,12 +3,18 @@ import {AppState, NativeModules, NativeEventEmitter} from 'react-native';
 
 import {CurrentTrack} from 'constants/constants';
 import ActionSetCurrentTrack from 'ActionSetCurrentTrack/ActionSetCurrentTrack';
+import ActionSetLoadingState from 'ActionSetLoadingState/ActionSetLoadingState';
+import ActionSetSpotifyAppRemoteState from 'ActionSetSpotifyAppRemoteState/ActionSetSpotifyAppRemoteState';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const {SpotifyModule} = NativeModules;
 import {connect} from 'react-redux';
 
 const AppStateContainer = (props) => {
-  const appRemoteSubscription = useRef(null);
-  const playerStateListener = useRef(null);
+  const {
+    spotifyAppRemoteState,
+    ActionSetLoadingState,
+    ActionSetSpotifyAppRemoteState,
+  } = props;
   const appStateListener = useRef(null);
 
   useEffect(() => {
@@ -37,35 +43,37 @@ const AppStateContainer = (props) => {
   const _handleAppStateChange = (nextAppState) => {
     if (nextAppState == null) return;
     if (nextAppState === 'active') {
-      _subscribeToAppRemote().then(() => _attachPlayerStateListener());
+      ActionSetLoadingState(false);
+      //_subscribeToAppRemote();
     }
     if (nextAppState === 'background') {
-      _disconnectFromAppRemote().then(() => _detachPlayerStateListener());
+      _disconnectFromAppRemote();
     }
-  };
-
-  const _subscribeToAppRemote = async () => {
-    appRemoteSubscription.current = await SpotifyModule.subscribeToAppRemote();
   };
 
   const _disconnectFromAppRemote = async () => {
-    if (appRemoteSubscription == null) return;
-    await SpotifyModule.disconnect();
+    if (spotifyAppRemoteState == false) return;
+    ActionSetSpotifyAppRemoteState(false);
+    await SpotifyModule.disconnectFromAppRemote();
   };
+
+  /* not in use at 1.0 
+
+  
 
   const _attachPlayerStateListener = () => {
     const eventEmitter = new NativeEventEmitter(SpotifyModule);
     playerStateListener.current = eventEmitter.addListener(
       'playerState',
       (event) => {
-        /*
-        event:{
+        
+       /**  event:{
           isPaused,
           nameame,
           uri,
           playbackPosition
         }
-        */
+        
         if (event?.uri == null) return;
         _setCurrentTrack(event);
       },
@@ -83,11 +91,18 @@ const AppStateContainer = (props) => {
     props.ActionSetCurrentTrack(currentTrack);
   };
 
+  */
+
   return null;
 };
 const mapStateToProps = (state) => {
-  return {};
+  return {
+    spotifyAppRemoteState:
+      state.ReducerSpotifyAppRemoteState.spotifyAppRemoteState,
+  };
 };
-export default connect(mapStateToProps, {ActionSetCurrentTrack})(
-  AppStateContainer,
-);
+export default connect(mapStateToProps, {
+  ActionSetCurrentTrack,
+  ActionSetLoadingState,
+  ActionSetSpotifyAppRemoteState,
+})(AppStateContainer);
