@@ -31,6 +31,7 @@ const JournalImageComponent = (props) => {
         style={styles.touchable_image_container}
         activeOpacity={1.0}>
         <Image
+          resizeMode={'contain'}
           style={{
             width: '100%',
             aspectRatio: _resolveAspectRatio(),

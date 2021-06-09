@@ -1,26 +1,20 @@
-import React from 'react';
-import {StyleSheet, View, TouchableOpacity, Text, Image} from 'react-native';
+import React, {useState} from 'react';
+import {StyleSheet, View} from 'react-native';
 
-import CurrentTrackComponent from 'CurrentTrackComponent/CurrentTrackComponent';
-import OpenSpotifySearchButtonComponent from 'OpenSpotifySearchButtonComponent/OpenSpotifySearchButtonComponent';
-import OpenAddNoteButtonComponent from 'OpenAddNoteButtonComponent/OpenAddNoteButtonComponent';
 import ShutterButtonComponent from 'ShutterButtonComponent/ShutterButtonComponent';
 import ExposureSliderComponent from 'ExposureSliderComponent/ExposureSliderComponent';
 import OpenJournalButtonComponent from 'OpenJournalButtonComponent/OpenJournalButtonComponent';
+import SelectActionButtonComponent from 'SelectActionButtonComponent/SelectActionButtonComponent';
 import {connect} from 'react-redux';
 
 const ControlPanelComponent = (props) => {
-  const {currentTrack} = props;
-
   return (
     <View style={styles.view_control_panel}>
-      {/*currentTrack !== null ? <CurrentTrackComponent /> : null*/}
-
       <ExposureSliderComponent />
       <View style={styles.view_horizontal_buttons_container}>
-        <OpenSpotifySearchButtonComponent />
+        <View style={{flex: 1}}></View>
         <ShutterButtonComponent />
-        <OpenAddNoteButtonComponent />
+        <SelectActionButtonComponent />
       </View>
       <OpenJournalButtonComponent />
     </View>
@@ -42,9 +36,7 @@ const styles = StyleSheet.create({
   },
 });
 const mapStateToProps = (state) => {
-  return {
-    currentTrack: state.ReducerCurrentTrack.currentTrack,
-  };
+  return {};
 };
 
 export default connect(mapStateToProps, {})(ControlPanelComponent);

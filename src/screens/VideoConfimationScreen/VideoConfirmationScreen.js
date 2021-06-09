@@ -31,14 +31,16 @@ const VideoConfirmationScreen = (props) => {
   };
   return (
     <View style={{flex: 1, backgroundColor: 'white', alignItems: 'center'}}>
-      <View style={styles.view_image_container}>
+      <TouchableOpacity
+        style={styles.touchable_video_container}
+        onPress={() => _setVideoState()}>
         <Video
           paused={paused}
           disableFocus={true}
           source={{uri: video.uri}}
           repeat={true}
           style={{width: '100%', aspectRatio: 9 / 16}}></Video>
-      </View>
+      </TouchableOpacity>
       <View
         style={{
           position: 'absolute',
@@ -46,38 +48,6 @@ const VideoConfirmationScreen = (props) => {
           width: '100%',
           alignItems: 'center',
         }}>
-        <View
-          style={{
-            alignSelf: 'center',
-            borderWidth: 1.5,
-            borderColor: '#f0f0f0',
-            borderRadius: 100,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'white',
-            marginVertical: 8,
-            maxWidth: '90%',
-          }}>
-          <TouchableOpacity
-            onPress={() => {
-              _setVideoState();
-            }}>
-            <Image
-              source={
-                paused == false
-                  ? require('Nectar/src/images/image_pause_icon.png')
-                  : require('Nectar/src/images/image_play_icon.png')
-              }
-              style={{
-                height: 42,
-                width: 42,
-                opacity: 0.6,
-                marginStart: 0,
-              }}></Image>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.view_savedelete_container}>
           <TouchableOpacity
             style={styles.view_delete_button}
@@ -95,7 +65,7 @@ const VideoConfirmationScreen = (props) => {
   );
 };
 const styles = StyleSheet.create({
-  view_image_container: {
+  touchable_video_container: {
     width: '95%',
     paddingTop: '10%',
   },

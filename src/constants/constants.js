@@ -5,6 +5,7 @@ export const ACTION_SET_CAMERA_TYPE = 'ActionSetCameraType';
 export const ACTION_SET_FOCUS_MARKER_LOCATION = 'ActionSetFocusMarkerLocation';
 export const ACTION_SET_LOADING_STATE = 'ActionSetLoadingState';
 export const ACTION_SET_SPOTIFY_APP_REMOTE_STATE = ' ActionSetAppRemoteState';
+export const ACTION_SET_VIDEO_PLAYBACK_STATE = 'ActionSetVideoPlaybackState';
 
 //Camera states
 

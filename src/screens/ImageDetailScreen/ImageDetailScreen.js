@@ -10,7 +10,14 @@ import {
 import {weekdays, months} from 'constants/constants';
 import CameraRoll from '@react-native-community/cameraroll';
 import JournalItemOptionsComponent from 'JournalItemOptionsComponent/JournalItemOptionsComponent';
+import FooterDateComponent from 'FooterDateComponent/FooterDateComponent';
+
 const ImageDetailScreen = ({route, navigation}) => {
+  const {journalItem} = route.params;
+  const {image} = journalItem.node;
+  const imageUri = image.uri;
+  const {width, height, orientation} = image;
+
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
 
   const _changeOptionsModalVisibility = (toVisibility) => {
@@ -19,72 +26,29 @@ const ImageDetailScreen = ({route, navigation}) => {
   const _deleteImage = () => {
     CameraRoll.deletePhotos([route.params.journalItem.node.image.uri]).then(
       () => {
-        navigation.navigate('Gallery');
+        navigation.popToTop();
       },
     );
   };
 
-  const _formatTime = () => {
-    let unix_timestamp = route.params.journalItem.node.timestamp;
+  const _resolveAspectRatio = () => {
+    //Cameraroll library on android doesn't differntiate between width / height on different orientation images.
+    //Therefore landscape images on android need to check orientation and use opposite aspect ratio.
+    if (Platform.OS == 'ios' || orientation == 0 || orientation == 180)
+      return height / width;
 
-    let date = new Date(unix_timestamp * 1000);
-
-    let dayOfTheWeek = weekdays[date.getDay()];
-    let dayOfTheMonth = date.getDate();
-    let month = months[date.getMonth()];
-    let year = date.getFullYear();
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    if (minutes < 10) {
-      minutes = '0' + minutes;
-    }
-
-    let formattedTime =
-      dayOfTheWeek +
-      ' ' +
-      dayOfTheMonth +
-      ' ' +
-      month +
-      ' ' +
-      year +
-      ', ' +
-      hours +
-      ':' +
-      minutes;
-
-    return formattedTime;
+    if (orientation == 90 || orientation == 270) return height / width;
   };
 
-  const _checkImageOrientation = () => {
-    let aspectRatio = 3 / 4;
-    let {image} = route.params.journalItem.node;
-    if (Platform.OS == 'android') {
-      if (image.orientation == 90 || image.orientation == 270) {
-        aspectRatio = image.height / image.width;
-      } else if (image.orientation == 0 || image.orientation == 180) {
-        aspectRatio = image.width / image.height;
-      }
-    } else {
-      aspectRatio = image.width / image.height;
-    }
-    return aspectRatio;
-  };
   return (
-    <View style={styles.container}>
-      <View style={{flex: 1, width: '100%', justifyContent: 'center'}}>
+    <View style={styles.view_container}>
+      <View style={styles.view_item_container}>
         <Image
-          style={{width: '100%', aspectRatio: _checkImageOrientation()}}
-          source={{uri: route.params.journalItem.node.image.uri}}></Image>
-        <Text
-          style={{
-            fontFamily: 'Merriweather-Light',
-            color: 'gray',
-            marginStart: 8,
-            marginTop: 8,
-          }}>
-          {_formatTime()}
-        </Text>
+          resizeMode={'contain'}
+          style={{height: '100%'}}
+          source={{uri: imageUri}}></Image>
       </View>
+      <FooterDateComponent journalItem={journalItem} />
       <View
         style={{
           flexDirection: 'row',
@@ -114,17 +78,21 @@ const ImageDetailScreen = ({route, navigation}) => {
   );
 };
 const styles = StyleSheet.create({
-  container: {
+  view_container: {
     flex: 1,
-    alignItems: 'center',
     backgroundColor: 'white',
+    justifyContent: 'space-between',
   },
 
-  text_delete: {
-    fontSize: 18,
-    fontFamily: 'Merriweather-Bold',
-    margin: 8,
+  view_item_container: {
+    flex: 1,
+    maxWidth: '95%',
+    marginTop: '10%',
+    alignSelf: 'center',
+    height: '100%',
+    aspectRatio: 3 / 4,
   },
+
   view_back_button_container: {
     paddingVertical: 16,
     paddingStart: 16,

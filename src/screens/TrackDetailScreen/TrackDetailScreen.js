@@ -29,7 +29,7 @@ const TrackDetailScreen = ({route, navigation}) => {
     tracksArray.splice(deletableTrackIndex, 1);
     await AsyncStorage.setItem('tracks', JSON.stringify(tracksArray)).then(
       () => {
-        navigation.goBack();
+        navigation.popToTop();
       },
     );
   };

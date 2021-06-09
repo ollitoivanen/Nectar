@@ -19,8 +19,8 @@ const JournalVideoComponent = (props) => {
     if (orientation == 90 || orientation == 270) return height / width;
   };
 
-  const _openImageDetailScreen = () => {
-    navigation.navigate('ImageDetail', {
+  const _openVideoDetailScreen = () => {
+    navigation.navigate('VideoDetail', {
       journalItem,
     });
   };
@@ -28,10 +28,12 @@ const JournalVideoComponent = (props) => {
   return (
     <React.Fragment>
       <TouchableOpacity
-        //onPress={() => _openImageDetailScreen()}
+        onPress={() => _openVideoDetailScreen()}
         style={styles.touchable_image_container}
         activeOpacity={1.0}>
         <Video
+          resizeMode={'contain'}
+          muted={true}
           paused={false}
           disableFocus={true}
           source={{uri: videoUri}}

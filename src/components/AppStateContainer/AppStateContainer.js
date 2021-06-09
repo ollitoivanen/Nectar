@@ -1,11 +1,9 @@
 import React, {useRef, useEffect} from 'react';
-import {AppState, NativeModules, NativeEventEmitter} from 'react-native';
+import {AppState, NativeModules} from 'react-native';
 
-import {CurrentTrack} from 'constants/constants';
 import ActionSetCurrentTrack from 'ActionSetCurrentTrack/ActionSetCurrentTrack';
 import ActionSetLoadingState from 'ActionSetLoadingState/ActionSetLoadingState';
 import ActionSetSpotifyAppRemoteState from 'ActionSetSpotifyAppRemoteState/ActionSetSpotifyAppRemoteState';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 const {SpotifyModule} = NativeModules;
 import {connect} from 'react-redux';
 

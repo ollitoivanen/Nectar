@@ -28,7 +28,7 @@ const NoteDetailScreen = ({route, navigation}) => {
     );
     notesArray.splice(deletableNoteIndex, 1);
     await AsyncStorage.setItem('notes', JSON.stringify(notesArray)).then(() => {
-      navigation.goBack();
+      navigation.popToTop();
     });
   };
   const _saveNote = async () => {
@@ -47,7 +47,7 @@ const NoteDetailScreen = ({route, navigation}) => {
       },
     });
     await AsyncStorage.setItem('notes', JSON.stringify(notesArray)).then(() => {
-      navigation.goBack();
+      navigation.popToTop();
     });
   };
   const _formatTime = () => {

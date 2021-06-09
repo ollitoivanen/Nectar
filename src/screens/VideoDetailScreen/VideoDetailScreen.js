@@ -1,252 +1,62 @@
-import React, {useState, useEffect} from 'react';
-import {
-  StyleSheet,
-  View,
-  Image,
-  TouchableOpacity,
-  Text,
-  Animated,
-  Platform,
-  NativeModules,
-} from 'react-native';
+import React, {useState} from 'react';
+import {StyleSheet, View, TouchableOpacity, Image, Text} from 'react-native';
 import CameraRoll from '@react-native-community/cameraroll';
 import Video from 'react-native-video';
-const {SpotifyModule} = NativeModules;
+import {weekdays, months} from 'constants/constants';
+import JournalItemOptionsComponent from 'JournalItemOptionsComponent/JournalItemOptionsComponent';
+import FooterDateComponent from 'FooterDateComponent/FooterDateComponent';
+import RNFS from 'react-native-fs';
 
 const VideoDetailScreen = ({route, navigation}) => {
-  const [beginning, setBeginning] = useState(true);
+  const {journalItem} = route.params;
+  const {image} = journalItem.node;
+  const videoUri = image.uri;
+  const {width, height, orientation} = image;
+
   const [paused, setPaused] = useState(false);
-  const [token, setToken] = useState(null);
-  const [optionsModalHeight, setOptionsModalHeight] = useState(
-    new Animated.Value(-300),
-  );
+  const [optionsModalVisible, setOptionsModalVisible] = useState(false);
 
-  const {track} = route.params.video.node.videoTrack.node;
-
-  useEffect(() => {
-    const _authenticate = async () => {
-      await SpotifyModule.authenticate().then(async (token) => {
-        setToken(token);
+  const _changeOptionsModalVisibility = (toVisibility) => {
+    setOptionsModalVisible(toVisibility);
+  };
+  const _deleteVideo = () => {
+    RNFS.unlink(videoUri).then(() => {
+      RNFS.scanFile(videoUri).then(() => {
+        navigation.popToTop();
       });
-    };
-    _authenticate();
-  }, []);
-
-  const _deleteImage = () => {
-    CameraRoll.deletePhotos([route.params.video.node.image.uri]).then(() => {
-      navigation.navigate('Gallery');
-    });
+    }); // Remove video from cache
   };
 
-  const _formatTime = () => {
-    let unix_timestamp = route.params.video.node.timestamp;
-
-    let date = new Date(unix_timestamp * 1000);
-    let weekdays = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    let months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-
-    let dayOfTheWeek = weekdays[date.getDay()];
-    let dayOfTheMonth = date.getDate();
-    let month = months[date.getMonth()];
-    let year = date.getFullYear();
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    if (minutes < 10) {
-      minutes = '0' + minutes;
-    }
-
-    let formattedTime =
-      dayOfTheWeek +
-      ' ' +
-      dayOfTheMonth +
-      ' ' +
-      month +
-      ' ' +
-      year +
-      ', ' +
-      hours +
-      ':' +
-      minutes;
-
-    return formattedTime;
+  const _setVideoState = () => {
+    setPaused(!paused);
   };
 
-  const _makeOptionsVisible = (toVisibilty) => {
-    if (toVisibilty === true) {
-      Animated.timing(optionsModalHeight, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
-    } else {
-      Animated.timing(optionsModalHeight, {
-        toValue: -300,
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
-    }
-  };
+  const _resolveAspectRatio = () => {
+    //Cameraroll library on android doesn't differntiate between width / height on different orientation images.
+    //Therefore landscape images on android need to check orientation and use opposite aspect ratio.
+    if (Platform.OS == 'ios' || orientation == 0 || orientation == 180)
+      return height / width;
 
-  const _checkImageOrientation = () => {
-    let aspectRatio = 9 / 16;
-    let {image} = route.params.video.node;
-    if (Platform.OS == 'android') {
-      if (image.orientation == 90 || image.orientation == 270) {
-        aspectRatio = image.height / image.width;
-      } else if (image.orientation == 0 || image.orientation == 180) {
-        aspectRatio = image.width / image.height;
-      }
-    } else {
-      aspectRatio = image.width / image.height;
-    }
-    return aspectRatio;
-  };
-
-  const _playTrackWeb = async () => {
-    return fetch('https://api.spotify.com/v1/me/player/play', {
-      headers: {
-        'Content-Type': 'application/json',
-
-        Authorization: 'Bearer ' + token,
-      },
-      method: 'PUT',
-      body: JSON.stringify({
-        uris: [route.params.video.node.videoTrack.node.track.uri],
-        position_ms:
-          route.params.video.node.videoTrack.node.track
-            .trackPlaybackPositionAtStart,
-      }),
-    });
-  };
-
-  const _playVideo = async () => {
-    if (paused) {
-      if (beginning) {
-        if (track !== null) {
-          _playTrackWeb();
-        }
-        setPaused(false);
-        setBeginning(false);
-      } else {
-        if (track !== null) {
-          _resumeTrack();
-        }
-        setPaused(false);
-      }
-    } else if (!paused) {
-      setPaused(true);
-      if (track !== null) {
-        _pauseTrack();
-      }
-    }
-  };
-
-  const _pauseTrack = () => {
-    SpotifyModule.pause();
-  };
-
-  const _pauseTrackAtEnd = () => {
-    setPaused(true);
-    setBeginning(true);
-    if (track !== null) {
-      _pauseTrack();
-    }
-  };
-
-  const _resumeTrack = () => {
-    SpotifyModule.resume();
+    if (orientation == 90 || orientation == 270) return height / width;
   };
 
   return (
-    <View style={styles.container}>
-      <View style={{flex: 1, width: '95%', justifyContent: 'center'}}>
-        <Video
-          paused={paused}
-          onEnd={() => _pauseTrackAtEnd()}
-          disableFocus={true}
-          onLoad={() => setPaused(true)}
-          style={{width: '100%', aspectRatio: _checkImageOrientation()}}
-          source={{uri: route.params.video.node.image.uri}}></Video>
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 16,
-            width: '100%',
-            alignItems: 'center',
-          }}>
-          <View
+    <View style={styles.view_container}>
+      <View style={styles.view_item_container}>
+        <TouchableOpacity onPress={() => _setVideoState()}>
+          <Video
+            paused={paused}
+            disableFocus={true}
+            muted={true}
+            source={{uri: videoUri}}
+            repeat={true}
+            resizeMode={'contain'}
             style={{
-              alignSelf: 'center',
-              borderWidth: 1.5,
-              borderColor: '#f0f0f0',
-              borderRadius: 100,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'white',
-              marginVertical: 8,
-              maxWidth: '90%',
-            }}>
-            <TouchableOpacity
-              onPress={() => {
-                _playVideo();
-              }}>
-              <Image
-                source={
-                  paused == false
-                    ? require('Nectar/src/images/image_pause_icon.png')
-                    : require('Nectar/src/images/image_play_icon.png')
-                }
-                style={{
-                  height: 42,
-                  width: 42,
-                  opacity: 0.6,
-                  marginStart: 0,
-                }}></Image>
-            </TouchableOpacity>
-            {track !== null ? (
-              <React.Fragment>
-                <Image
-                  source={require('Nectar/src/images/image_spotify_icon.png')}
-                  style={{height: 16, width: 16, marginStart: 4}}></Image>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    marginStart: 8,
-                    marginEnd: 12,
-                    marginVertical: 4,
-                    fontWeight: 'bold',
-                    fontSize: 13,
-                    flexShrink: 1,
-                  }}>
-                  {track.name}
-                </Text>
-              </React.Fragment>
-            ) : null}
-          </View>
-        </View>
+              height: '100%',
+            }}></Video>
+        </TouchableOpacity>
       </View>
+      <FooterDateComponent journalItem={journalItem} />
 
       <View
         style={{
@@ -261,61 +71,40 @@ const VideoDetailScreen = ({route, navigation}) => {
             style={styles.image_backarrow}
             source={require('Nectar/src/images/image_downarrow.png')}></Image>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => _makeOptionsVisible(true)}>
+        <TouchableOpacity onPress={() => _changeOptionsModalVisibility(true)}>
           <Text style={{fontSize: 20, marginHorizontal: 24}}>⋮</Text>
         </TouchableOpacity>
       </View>
-      <Animated.View
-        style={{
-          position: 'absolute',
-          bottom: optionsModalHeight,
-          width: '100%',
-          backgroundColor: 'white',
-          borderTopWidth: 1,
-          borderTopColor: 'lightgray',
-          paddingTop: 8,
-        }}>
-        <TouchableOpacity
-          onPress={() => _deleteImage()}
-          style={styles.view_delete_button}>
-          <Text style={styles.text_delete}>Delete</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => _makeOptionsVisible(false)}
-          style={styles.view_journal_button_container}>
-          <Image
-            style={styles.image_downarrow}
-            source={require('Nectar/src/images/image_downarrow.png')}></Image>
-        </TouchableOpacity>
-      </Animated.View>
+      {optionsModalVisible ? (
+        <JournalItemOptionsComponent
+          _changeOptionsModalVisibility={(toVisibility) =>
+            _changeOptionsModalVisibility(toVisibility)
+          }
+          _deleteItem={() => _deleteVideo()}
+        />
+      ) : null}
     </View>
   );
 };
 const styles = StyleSheet.create({
-  container: {
+  view_container: {
     flex: 1,
-    alignItems: 'center',
     backgroundColor: 'white',
+    justifyContent: 'space-between',
   },
 
-  text_delete: {
-    fontSize: 18,
-    fontFamily: 'Merriweather-Bold',
-    margin: 8,
+  view_item_container: {
+    flex: 1,
+    maxWidth: '95%',
+    marginTop: '10%',
+    alignSelf: 'center',
+    height: '100%',
+    aspectRatio: 9 / 16,
   },
   view_back_button_container: {
     paddingVertical: 16,
     paddingStart: 16,
     flex: 1,
-  },
-
-  view_delete_button: {
-    borderWidth: 2,
-    borderRadius: 50,
-    borderColor: 'black',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 16,
   },
   view_journal_button_container: {
     flexDirection: 'row',
@@ -323,14 +112,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
   },
+
   image_backarrow: {
     height: 30,
     width: 30,
     transform: [{rotate: '90deg'}],
-  },
-  image_downarrow: {
-    height: 26,
-    width: 26,
   },
 });
 export default VideoDetailScreen;
