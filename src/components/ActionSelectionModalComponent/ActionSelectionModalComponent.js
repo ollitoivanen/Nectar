@@ -28,6 +28,7 @@ const ActionSelectionModalComponent = (props) => {
   };
   return (
     <Modal
+      statusBarTranslucent={true}
       animationType={'fade'}
       transparent={true}
       visible={actionSelectionModalVisible}>
@@ -58,7 +59,7 @@ const ActionSelectionModalComponent = (props) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.touchable_action_container}
-            onPress={() => _navigateToAddNoteScreen()}>
+            onPress={() => _navigateToPhotoLibraryScreen()}>
             <View style={styles.view_action_icon}>
               <Image
                 style={styles.image_action_icon}

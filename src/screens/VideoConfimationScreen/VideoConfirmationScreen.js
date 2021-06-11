@@ -13,6 +13,7 @@ const VideoConfirmationScreen = (props) => {
   const {route, navigation} = props;
   const [paused, setPaused] = useState(false);
   const {video} = route.params;
+  const videoUri = video.uri;
 
   const _setVideoState = () => {
     setPaused(!paused);
@@ -30,44 +31,50 @@ const VideoConfirmationScreen = (props) => {
     });
   };
   return (
-    <View style={{flex: 1, backgroundColor: 'white', alignItems: 'center'}}>
-      <TouchableOpacity
-        style={styles.touchable_video_container}
-        onPress={() => _setVideoState()}>
-        <Video
-          paused={paused}
-          disableFocus={true}
-          source={{uri: video.uri}}
-          repeat={true}
-          style={{width: '100%', aspectRatio: 9 / 16}}></Video>
-      </TouchableOpacity>
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 16,
-          width: '100%',
-          alignItems: 'center',
-        }}>
-        <View style={styles.view_savedelete_container}>
-          <TouchableOpacity
-            style={styles.view_delete_button}
-            onPress={() => _discardVideo()}>
-            <Text style={styles.text_delete}>Discard</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.view_save_button}
-            onPress={() => _saveVideo()}>
-            <Text style={styles.text_save}>Save</Text>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.view_container}>
+      <View style={styles.view_item_container}>
+        <TouchableOpacity onPress={() => _setVideoState()}>
+          <Video
+            paused={paused}
+            disableFocus={true}
+            source={{uri: video.uri}}
+            repeat={true}
+            resizeMode={'contain'}
+            style={{
+              height: '100%',
+            }}></Video>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.view_savedelete_container}>
+        <TouchableOpacity
+          style={styles.view_delete_button}
+          onPress={() => _discardVideo()}>
+          <Text style={styles.text_delete}>Discard</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.view_save_button}
+          onPress={() => _saveVideo()}>
+          <Text style={styles.text_save}>Save</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 const styles = StyleSheet.create({
-  touchable_video_container: {
-    width: '95%',
-    paddingTop: '10%',
+  view_container: {
+    flex: 1,
+    backgroundColor: 'white',
+    alignItems: 'center',
+  },
+
+  view_item_container: {
+    flex: 1,
+    maxWidth: '95%',
+    marginTop: '10%',
+    alignSelf: 'center',
+    height: '100%',
+    aspectRatio: 9 / 16,
   },
   view_delete_button: {
     backgroundColor: 'white',
@@ -95,6 +102,7 @@ const styles = StyleSheet.create({
   view_savedelete_container: {
     width: '100%',
     flexDirection: 'row',
+    marginVertical: 16,
   },
 
   text_save: {

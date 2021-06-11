@@ -18,6 +18,8 @@ import TrackDetailScreen from 'TrackDetailScreen/TrackDetailScreen';
 import ImageConfirmationScreen from 'ImageConfirmationScreen/ImageConfirmationScreen';
 import VideoConfirmationScreen from 'VideoConfirmationScreen/VideoConfirmationScreen';
 import VideoDetailScreen from 'VideoDetailScreen/VideoDetailScreen';
+import PhotoLibraryScreen from 'PhotoLibraryScreen/PhotoLibraryScreen';
+import PhotoLibraryImportConfirmationScreen from 'PhotoLibraryImportConfirmationScreen/PhotoLibraryImportConfirmationScreen';
 
 const NavigationStackContainer = (props) => {
   const {loadingState} = props;
@@ -80,6 +82,12 @@ const NavigationStackContainer = (props) => {
             <Stack.Screen
               name="VideoDetail"
               component={VideoDetailScreen}></Stack.Screen>
+            <Stack.Screen
+              name="PhotoLibrary"
+              component={PhotoLibraryScreen}></Stack.Screen>
+            <Stack.Screen
+              name="PhotoLibraryImportConfirmation"
+              component={PhotoLibraryImportConfirmationScreen}></Stack.Screen>
           </Stack.Navigator>
         </SafeAreaView>
       </NavigationContainer>

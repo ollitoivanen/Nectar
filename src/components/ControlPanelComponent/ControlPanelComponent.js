@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   view_control_panel: {
     position: 'absolute',
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'white',
     alignItems: 'center',
   },
 

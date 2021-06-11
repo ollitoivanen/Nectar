@@ -28,10 +28,8 @@ const ImageConfirmationScreen = (props) => {
   return (
     <View style={styles.view_container}>
       <Image
-        style={{
-          width: '95%',
-          aspectRatio: 3 / 4,
-        }}
+        resizeMode={'contain'}
+        style={styles.image_item_resizing}
         key={imageUri}
         source={{uri: imageUri}}></Image>
       <View style={styles.view_savedelete_container}>
@@ -54,17 +52,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     alignItems: 'center',
-    paddingTop: '10%',
   },
-  view_image_container: {
-    width: '95%',
-    marginTop: '10%',
-    elevation: 8,
-    alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 12,
-    paddingBottom: 64,
-  },
+
   view_delete_button: {
     backgroundColor: 'white',
     flex: 1,
@@ -91,8 +80,15 @@ const styles = StyleSheet.create({
   view_savedelete_container: {
     width: '100%',
     flexDirection: 'row',
-    position: 'absolute',
-    bottom: 16,
+    marginVertical: 16,
+  },
+  image_item_resizing: {
+    height: '100%',
+    maxWidth: '95%',
+    marginTop: '10%',
+    alignSelf: 'center',
+    flex: 1,
+    width: '100%',
   },
   text_save: {
     margin: 8,

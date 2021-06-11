@@ -8,14 +8,12 @@ import {
   Text,
   Animated,
 } from 'react-native';
-import {weekdays, months} from 'constants/constants';
 import CameraRoll from '@react-native-community/cameraroll';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import JournalImageComponent from 'JournalImageComponent/JournalImageComponent';
 import JournalNoteComponent from 'JournalNoteComponent/JournalNoteComponent';
 import JournalTrackComponent from 'JournalTrackComponent/JournalTrackComponent';
-import JournalDateComponent from 'JournalDateComponent/JournalDateComponent';
 import JournalVideoComponent from 'JournalVideoComponent/JournalVideoComponent';
 
 const GalleryScreen = ({navigation}) => {
@@ -60,7 +58,7 @@ const GalleryScreen = ({navigation}) => {
   const _loadImages = async () => {
     let imArray = [];
     await CameraRoll.getPhotos({
-      first: 100,
+      first: 10000,
       groupTypes: 'Album',
       groupName: 'Nectar',
       include: ['imageSize', 'orientation'],
@@ -113,26 +111,6 @@ const GalleryScreen = ({navigation}) => {
         break;
     }
   };
-  /*if (item.node.type === 'videoWithTrack') {
-      return (
-        <TouchableOpacity
-          activeOpacity={1.0}
-          style={{
-            width: '90%',
-            marginVertical: 64,
-            alignSelf: 'center',
-          }}
-          onPress={() =>
-            navigation.navigate('VideoDetail', {
-              video: item,
-            })
-          }>
-          <Image
-            style={{width: '100%', aspectRatio: 9 / 16}}
-            source={{uri: item.node.image.uri}}></Image>
-        </TouchableOpacity>
-      );
-    }*/
 
   const _checkIfLoadingReady = () => {
     if (loadingReady) {

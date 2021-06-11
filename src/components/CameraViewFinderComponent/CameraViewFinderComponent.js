@@ -63,6 +63,7 @@ const CameraViewFinderComponent = (props) => {
       .takePictureAsync({
         orientation: 'portrait',
         doNotSave: false,
+        quality: 0.9,
       })
       .then((image) => {
         navigation.navigate('ImageConfirmation', {image});
@@ -112,6 +113,7 @@ const styles = StyleSheet.create({
     width: '95%',
     marginTop: '10%',
     backgroundColor: 'white',
+    height: '100%',
   },
   camera_view_finder: {
     width: '100%',

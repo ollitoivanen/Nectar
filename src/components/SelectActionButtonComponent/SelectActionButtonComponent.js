@@ -12,7 +12,7 @@ const SelectActionButtonComponent = (props) => {
   return (
     <View style={{flex: 1, justifyContent: 'center'}}>
       <TouchableOpacity
-        onPressIn={() => _changeActionSelectionModalVisibility(true)}
+        onPress={() => _changeActionSelectionModalVisibility(true)}
         style={styles.touchable_open_action_selection}>
         <Text style={styles.text_plus_sign}>+</Text>
       </TouchableOpacity>

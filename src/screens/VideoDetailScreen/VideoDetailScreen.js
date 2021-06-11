@@ -1,8 +1,6 @@
 import React, {useState} from 'react';
 import {StyleSheet, View, TouchableOpacity, Image, Text} from 'react-native';
-import CameraRoll from '@react-native-community/cameraroll';
 import Video from 'react-native-video';
-import {weekdays, months} from 'constants/constants';
 import JournalItemOptionsComponent from 'JournalItemOptionsComponent/JournalItemOptionsComponent';
 import FooterDateComponent from 'FooterDateComponent/FooterDateComponent';
 import RNFS from 'react-native-fs';
@@ -11,7 +9,6 @@ const VideoDetailScreen = ({route, navigation}) => {
   const {journalItem} = route.params;
   const {image} = journalItem.node;
   const videoUri = image.uri;
-  const {width, height, orientation} = image;
 
   const [paused, setPaused] = useState(false);
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
@@ -29,15 +26,6 @@ const VideoDetailScreen = ({route, navigation}) => {
 
   const _setVideoState = () => {
     setPaused(!paused);
-  };
-
-  const _resolveAspectRatio = () => {
-    //Cameraroll library on android doesn't differntiate between width / height on different orientation images.
-    //Therefore landscape images on android need to check orientation and use opposite aspect ratio.
-    if (Platform.OS == 'ios' || orientation == 0 || orientation == 180)
-      return height / width;
-
-    if (orientation == 90 || orientation == 270) return height / width;
   };
 
   return (
